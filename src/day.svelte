@@ -8,6 +8,8 @@
 <div
   class="day"
   class:disabled="{day.disabled}"
+  class:prec="{day.prec}"
+  class:next="{day.next}"
   class:offmonth="{day.offmonth}"
   class:weekend="{day.weekend}"
   class:today="{day.today}"
@@ -21,9 +23,6 @@
 </div>
 
 <style>
-  :root {
-    --day-width: 1.5em;
-  }
   .day {
     box-sizing: border-box;
     cursor: pointer;
@@ -31,6 +30,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    border-bottom: 1px solid #d7d7d7;
+    border-left: 1px solid #d7d7d7;
+  }
+  .day:nth-child(7n + 1) {
+    border-left: none;
+  }
+  .day:nth-last-child(-n + 7) {
+    border-bottom: none;
   }
   .day:hover {
     background-color: rgba(0, 0, 0, 0.072);
@@ -42,7 +49,7 @@
     line-height: 34px;
   }
   .today:not(.selected) {
-    box-shadow: 0 0 0vw 0.1em var(--today-background);
+    border: 1px solid var(--today-background);
   }
   .selected {
     background: var(--selected-background) !important;
@@ -51,8 +58,18 @@
     font-weight: 700;
     color: var(--selected-color) !important;
   }
-  .offmonth .value {
-    color: var(--offmonth-color);
+  .offmonth > span {
+    opacity: 0.2;
+  }
+  .prec {
+    border-left: none;
+  }
+  .next {
+    border-bottom: none;
+    border-left: none;
+  }
+  :global(.day:not(.next) + .next) {
+    border-left: 1px solid #d7d7d7;
   }
   .offmonth.selected {
     background: var(--offmonth-background-color);
@@ -61,8 +78,8 @@
     background-color: var(--disabled--background-color) !important;
     pointer-events: none;
   }
-  .disabled .value, .disabled.weekend .value{
-    color: var(--disabled-color) !important;
+  .disabled .value,
+  .disabled.weekend .value {
     pointer-events: none;
   }
   .weekend .value {
