@@ -1,8 +1,8 @@
 <script>
   let intro = [() => {}, {}]
-  export {intro as in}
+  export { intro as in }
   let outro = intro
-  export {outro as out}
+  export { outro as out }
   let introFunc = intro[0]
   let introParams = intro[1]
   let outroFunc = outro[0]
@@ -24,7 +24,7 @@
 </div>
 
 <style>
-  .transition{
+  .transition {
     height: 100%;
     width: 100%;
   }
