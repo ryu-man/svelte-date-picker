@@ -1,18 +1,16 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
-  import { today, calendarContext } from './calendar.svelte'
+  import { today } from './calendar.svelte'
   import { format } from 'date-fns'
+  import { getCalendarContext } from './context.js'
   import ArrowLeftIcon from './icons/arrow_left_icon.svelte'
   import ArrowRightIcon from './icons/arrow_right_icon.svelte'
 
   const dispatch = createEventDispatcher()
-  const context = calendarContext()
+  const { selectedContext, calendarContext } = getCalendarContext()
 
-  let calendar = $context.calendar
-  let pivotYear = calendar.getFullYear()
-
-  $: calendar = $context.calendar
+  let pivotYear = $calendarContext.getFullYear()
 
   function getMonths() {
     const sample = new Date()
@@ -39,18 +37,18 @@
   }
 </script>
 
-<div class="options" transition:fade="{{ duration: 200 }}">
-  <div class="options-container">
+<div class="options" transition:fade="{{ duration: 200, delay:100 }}">
+  <div class="inner-options">
     <div class="months-container">
       {#each getMonths() as month, i}
         <div
           id="{'m' + i}"
           class="month"
           class:today="{month.today}"
-          class:selected="{calendar.getMonth() === i}"
+          class:selected="{$calendarContext.getMonth() === i}"
           on:click="{() => {
-            calendar.setMonth(i)
-            $context.calendar = calendar
+            $calendarContext.setMonth(i)
+            $calendarContext = $calendarContext
             dispatch('action')
           }}"
         >
@@ -58,33 +56,35 @@
         </div>
       {/each}
     </div>
-    <div class="navigation buttons">
-      <div class="prev button" on:click="{() => (pivotYear -= 10)}">
-        <ArrowLeftIcon />
-      </div>
-      <span class="range">{`${pivotYear - 10} - ${pivotYear + 10}`}</span>
-      <div class="next button" on:click="{() => (pivotYear += 10)}">
-        <ArrowRightIcon />
-      </div>
-    </div>
-    <div class="years-container scrollable">
-      <!-- <div class="years" transition:fade> -->
-      {#each getYears(pivotYear) as year, i}
-        <!-- content here -->
-        <div
-          id="{'y' + year}"
-          class="year"
-          class:today="{today.getFullYear() == year}"
-          class:selected="{calendar.getFullYear() === year}"
-          on:click="{() => {
-            calendar.setFullYear(year)
-            $context.calendar = calendar
-          }}"
-        >
-          {year}
+    <div class="years-container">
+      <nav>
+        <div class="prev button" on:click="{() => (pivotYear -= 10)}">
+          <ArrowLeftIcon />
         </div>
-      {/each}
-      <!-- </div> -->
+        <span class="range">{`${pivotYear - 10} - ${pivotYear + 10}`}</span>
+        <div class="next button" on:click="{() => (pivotYear += 10)}">
+          <ArrowRightIcon />
+        </div>
+      </nav>
+      <div class="years-grid scrollable">
+        <!-- <div class="years" transition:fade> -->
+        {#each getYears(pivotYear) as year, i}
+          <!-- content here -->
+          <div
+            id="{'y' + year}"
+            class="year"
+            class:today="{today.getFullYear() == year}"
+            class:selected="{$calendarContext.getFullYear() === year}"
+            on:click="{() => {
+              $calendarContext.setFullYear(year)
+              $calendarContext = $calendarContext
+            }}"
+          >
+            {year}
+          </div>
+        {/each}
+        <!-- </div> -->
+      </div>
     </div>
   </div>
 </div>
@@ -92,48 +92,53 @@
 <style>
   .options {
     display: flex;
-    position: fixed;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow: hidden;
-    backdrop-filter: blur(8px);
-    z-index: 0;
+    background-color: #fff;
     border-radius: var(--border-radius);
+    z-index: 0;
+
+    --border-width: 1px;
+    --border-color: #d7d7dd
   }
-  .options-container {
+  .inner-options {
     position: relative;
     display: flex;
-    flex-direction: column;
     width: 100%;
-    padding: 0.6em;
   }
-
-  .years-container {
+  .years-container{
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    color: rgb(58, 58, 58);
+  }
+  .years-grid {
     flex: 1;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     justify-content: center;
     align-items: center;
   }
-  .years {
-    /* position: absolute; */
-    text-align: center;
-  }
   .year {
-    padding: 0.6em;
-    font-size: 1.2em;
-    transition: all 0.3s;
-  }
-  .months-container {
+    height: 100%;
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.7em;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s;
+    border-bottom: var(--border-width) solid var(--border-color);
+    border-right: var(--border-width) solid var(--border-color);
   }
-  .months {
-    /* position: absolute; */
-    text-align: center;
+  .year:nth-child(4n){
+    border-right: none;
+
   }
-  .month {
-    padding: 0.1em;
-    font-size: 0.8em;
+  .year:nth-child(n+17){
+    border-bottom: none;
+
   }
   .year.selected {
     background-color: var(--weekend-color);
@@ -141,18 +146,30 @@
     color: #fff;
     transition: all 0.3s;
   }
+  .months-container {
+    padding-right: .2em;
+    border-right: var(--border-width) solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .month {
+    padding: 0.1em;
+    font-size: 0.8em;
+    flex:1;
+  }
   .month.selected {
     color: var(--weekend-color);
-    border-bottom: 2px solid var(--weekend-color);
+    border-left: 2px solid var(--weekend-color);
     font-weight: 700;
   }
-  .navigation.buttons {
+  nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: var(--weekend-color);
+    border-bottom: var(--border-width) solid var(--border-color);
   }
-  .navigation.buttons > .button {
+  nav > .button {
     width: 36px;
   }
 </style>

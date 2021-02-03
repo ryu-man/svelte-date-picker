@@ -1,20 +1,19 @@
 <script>
-  import { createEventDispatcher, hasContext, setContext } from 'svelte'
+  import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import { expoOut } from 'svelte/easing'
-  import Calendar, {
-    today,
-    calendarContext,
-    contextKey
-  } from '../calendar.svelte'
+  import Calendar from '../calendar.svelte'
   import Transition from '../transition.svelte'
   import DateInput from './date_input.svelte'
   import CalendarIcon from '../icons/calendar_icon.svelte'
+  import { getCalendarContext, setCalendarContext } from '../context.js'
   import { writable } from 'svelte/store'
 
   const dispatch = createEventDispatcher()
-  !hasContext(contextKey) && setContext(contextKey, writable({ selected:undefined }))
-  const context = calendarContext()
+  const { selectedContext } = getCalendarContext({
+    selectedContext: writable(undefined),
+    calendarContext: writable()
+  })
 
   let editable = false
   // export let style = ''
@@ -44,8 +43,8 @@
   let translate = { x: 0, y: 0 }
   let windowsWidth
 
-  $: selected = $context.selected
-  
+  selected && ($selectedContext = selected)
+
   function grow(node, { delay = 0, duration = 400, easing = expoOut }) {
     return {
       delay,
@@ -98,9 +97,7 @@
       }
       return { x, y }
     }
-    const { x, y } = getTranslate()
-    translate.x = x
-    translate.y = y
+    translate = getTranslate()
 
     document.addEventListener('click', focusLossHandler)
 
@@ -132,7 +129,7 @@
         on:outroend="{() => dispatch('closed')}"
       >
         <Transition in="{[fade, { duration: 400 }]}">
-          <slot close="{()=>(open=false)}">
+          <slot close="{() => (open = false)}">
             <Calendar
               locale="{locale}"
               predicate="{(d) => false}"
@@ -151,7 +148,7 @@
     <div>
       {#each [...format.matchAll(/(\w+|\W+)/g)] as f}
         {#if f[0].match(/\w+/g)}
-          <DateInput date="{selected}" format="{f[0]}" />
+          <DateInput date="{$selectedContext}" format="{f[0]}" />
         {:else}<span>{f[0]}</span>{/if}
       {/each}
     </div>

@@ -1,6 +1,4 @@
 <script context="module">
-  import { setContext, getContext, hasContext } from 'svelte'
-
   export const contextKey = {}
   export const today = new Date()
   today.setHours(0)
@@ -8,14 +6,15 @@
   today.setSeconds(0)
   today.setMilliseconds(0)
 
-  export function calendarContext() {
+  /* export function calendarContext() {
     return getContext(contextKey)
-  }
+  } */
 </script>
 
 <script>
   import { onMount, createEventDispatcher } from 'svelte'
   import { writable } from 'svelte/store'
+  import { getCalendarContext } from './context.js'
   import Month from './month.svelte'
   import Header from './header.svelte'
   import Options from './options.svelte'
@@ -30,10 +29,11 @@
   export let style = {}
 
   let x = 96
-  let context = calendarContext()
-  !hasContext(contextKey) ? setContext(contextKey, context = writable({ selected, initial })) : $context.calendar = initial
-
-  // setContext(contextKey, context)
+  let { selectedContext, calendarContext } = getCalendarContext({
+    selectedContext: writable(undefined),
+    calendarContext: writable(selected || initial)
+  })
+  $calendarContext = $selectedContext || initial
 
   onMount(function () {
     document.addEventListener('keyup', function (e) {
@@ -50,11 +50,11 @@
 
 <div class="calendar" on:click|stopPropagation="{() => {}}">
   <Header bind:index locale="{locale}" />
-  <div class="container">
+  <!-- <div class="container"> -->
     <Month
-    disablePredicate="{disablePredicate}"
+      disablePredicate="{disablePredicate}"
       on:action="{function (_e) {
-        selected = $context.selected
+        selected = $selectedContext
         dispatch('action', selected)
       }}"
     />
@@ -65,7 +65,7 @@
         }}"
       />
     {/if}
-  </div>
+  <!-- </div> -->
 </div>
 
 <style>
@@ -75,10 +75,6 @@
   }
   .calendar {
     --border-radius: 0.1em;
-
-    padding: 0.6em;
-    width: 320px;
-    height: 380px;
     box-shadow: 0 0 0 1px #dddddd;
     background-color: var(--background);
     box-sizing: border-box;
@@ -92,12 +88,12 @@
     flex: 1;
   }
   :global(.container > *) {
-    position: absolute;
+    /* position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
-    height: 100%;
+    height: 100%; */
   }
 </style>
