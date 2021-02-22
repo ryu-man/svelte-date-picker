@@ -1,6 +1,6 @@
-# React date picker
+# Svelte date picker
 
-an implementation of a date picker for Svelte.js framework
+A modern date picker for Svelte.js framework
 
 ## Usage
 
